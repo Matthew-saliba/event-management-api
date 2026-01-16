@@ -31,21 +31,3 @@ Once running, visit: http://127.0.0.1:8000/docs
 Matthew Saliba
 ITMSD-506-2301 | Database Essentials  
 Assignment: A02
-```
-
-**Save it!**
-
----
-
-## ✅ Check Your Project Structure
-
-Your folder should now look like this:
-```
-event-management-api/
-├── .venv/              (virtual environment folder)
-├── .env                (MongoDB credentials)
-├── .gitignore          (Git ignore rules)
-├── main.py             (empty for now)
-├── requirements.txt    (your dependencies)
-├── vercel.json         (Vercel config)
-└── README.md           (documentation)
