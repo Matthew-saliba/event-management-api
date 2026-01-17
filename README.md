@@ -29,5 +29,4 @@ Once running, visit: http://127.0.0.1:8000/docs
 ## Author
 
 Matthew Saliba
-ITMSD-506-2301 | Database Essentials  
-Assignment: A02
+Database Essentials Assignment
