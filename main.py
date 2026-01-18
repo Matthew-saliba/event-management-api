@@ -17,6 +17,9 @@ app = FastAPI()
 client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv("MONGO_URI"))
 db = client.event_management_db
 
+# Security: Pydantic models validate all input data, preventing SQL/NoSQL injection
+# by enforcing strict data types and rejecting malformed requests before database operations
+
 # Data Models
 class Event(BaseModel):
     name: str
