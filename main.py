@@ -9,16 +9,15 @@ import motor.motor_asyncio
 import io
 
 # Load environment variables from .env file
+# This securely loads MongoDB credentials without hardcoding them in the code
 load_dotenv()
 
 app = FastAPI()
 
 # Connect to MongoDB Atlas using connection string from .env
+# Motor is an async driver that allows non-blocking database operations
 client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv("MONGO_URI"))
 db = client.event_management_db
-
-# Security: Pydantic models validate all input data, preventing SQL/NoSQL injection
-# by enforcing strict data types and rejecting malformed requests before database operations
 
 # Data Models
 class Event(BaseModel):
@@ -45,15 +44,22 @@ class Booking(BaseModel):
     quantity: int
 
 # Event Endpoints
+# These endpoints handle CRUD operations for events
+# All database operations use async/await for better performance
 @app.post("/events")
 async def create_event(event: Event):
+    # Convert Pydantic model to dictionary for MongoDB insertion
     event_doc = event.dict()
+    # Insert document into events collection, MongoDB auto-generates _id
     result = await db.events.insert_one(event_doc)
+    # Return success message with the new document's ID
     return {"message": "Event created", "id": str(result.inserted_id)}
 
 @app.get("/events")
 async def get_events():
+    # Retrieve up to 100 events from database
     events = await db.events.find().to_list(100)
+    # Convert MongoDB ObjectId to string for JSON serialization
     for event in events:
         event["_id"] = str(event["_id"])
     return events
@@ -61,7 +67,9 @@ async def get_events():
 # Upload Event Poster (Image)
 @app.post("/upload_event_poster/{event_id}")
 async def upload_event_poster(event_id: str, file: UploadFile = File(...)):
+    # Read uploaded file as binary content
     content = await file.read()
+    # Store file metadata and binary content in database
     poster_doc = {
         "event_id": event_id,
         "filename": file.filename,
@@ -75,8 +83,10 @@ async def upload_event_poster(event_id: str, file: UploadFile = File(...)):
 # Update Event
 @app.put("/events/{event_id}")
 async def update_event(event_id: str, event: Event):
+    # Import ObjectId locally to convert string ID to MongoDB ObjectId
     from bson import ObjectId
     event_doc = event.dict()
+    # Use $set operator to update only provided fields
     result = await db.events.update_one({"_id": ObjectId(event_id)}, {"$set": event_doc})
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -95,9 +105,11 @@ async def delete_event(event_id: str):
 @app.get("/event_poster/{poster_id}")
 async def get_event_poster(poster_id: str):
     from bson import ObjectId
+    # Find poster document by ID
     poster = await db.event_posters.find_one({"_id": ObjectId(poster_id)})
     if not poster:
         raise HTTPException(status_code=404, detail="Poster not found")
+    # Return binary content as streaming response so browser can display image
     return StreamingResponse(io.BytesIO(poster["content"]), media_type=poster["content_type"])
 
 # Attendee Endpoints
